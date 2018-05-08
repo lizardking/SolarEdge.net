@@ -18,7 +18,7 @@ namespace SolarEdgeDataFetcher
     /// The received data is available from the SolarEdgeFullData and SolarEdgeBaseData properties. SolarEdgeDataIsValid indicates whether the current values of these properties are valid.
     /// </summary>
     /// <seealso cref="System.IDisposable" />
-    public class DataFetcher : IDisposable
+    public sealed class DataFetcher : IDisposable
     {
 
         #region Constants
@@ -104,6 +104,14 @@ namespace SolarEdgeDataFetcher
         /// </value>
         public DataUpdateModeEnum DataUpdateMode { get; set; } = DataUpdateModeEnum.UpdateExistingObjects;
 
+        /// <summary>
+        /// Gets or sets the number of ms after which the DataIsValid property will be set to false if the data has not been updated.
+        /// </summary>
+        /// <value>
+        /// The number of ms after which the DataIsValid property will be set to false if the data has not been updated (default 120000 ms resp. 2min).
+        /// </value>
+        public int DataInvalidAfterMs { get; set; } = 2 * 60 * 1000;
+
 
         #endregion
 
@@ -126,7 +134,12 @@ namespace SolarEdgeDataFetcher
                         ConnectionTimeout = ConnectionTimeoutMs
                     };
 
-
+                    dataValidTimeoutTimer = new Timer
+                    {
+                        AutoReset=false,
+                        Interval=DataInvalidAfterMs
+                    };
+                    dataValidTimeoutTimer.Elapsed += DataValidTimeoutTimer_Elapsed;
                     updateTimer = new Timer()
                     {
                         AutoReset = false,
@@ -143,6 +156,8 @@ namespace SolarEdgeDataFetcher
             }
         }
 
+   
+
         /// <summary>
         /// Stops the DataFetcher.
         /// </summary>
@@ -153,7 +168,10 @@ namespace SolarEdgeDataFetcher
                 if (modbusClient != null)
                 {
                     log.Info($"Stopping {nameof(DataFetcher)}");
+                    dataValidTimeoutTimer.Stop();
+                    dataValidTimeoutTimer.Elapsed -= DataValidTimeoutTimer_Elapsed;
                     updateTimer.Stop();
+                    updateTimer.Elapsed -= UpdateTimer_Elapsed;
                     modbusClient.Disconnect();
                     ConnectionEstablished = false;
 
@@ -180,6 +198,7 @@ namespace SolarEdgeDataFetcher
 
         private object locker = new object();
 
+        private Timer dataValidTimeoutTimer = new Timer();
 
         private Queue<DateTime> connEstablishedQueue = new Queue<DateTime>();
 
@@ -270,13 +289,14 @@ namespace SolarEdgeDataFetcher
                     catch (Exception E)
                     {
                         ExceptionText = E.Message;
+                        
                     }
 
                     if (!ExceptionText.IsNullOrWhiteSpace())
                     {
-                        log.Debug($"Disconnecting from Modbus {IPAdress}:{ModBusPort} due to a exception while establishing the connection or while reading data.\n{ExceptionText}");
+                        log.Debug($"Exception occured while establishing the connection or while reading data.\n{ExceptionText}");
                         DisconnectFromModbus();
-                        SolarEdgeDataIsValid = false;
+                      
                     }
                     else
                     {
@@ -298,9 +318,7 @@ namespace SolarEdgeDataFetcher
                                         if (_SolarEdgeBaseData == null) SolarEdgeBaseData = new SolarEdgeBaseData();
                                         if (ReadInverterData) { U.UpdateData(inverterResponse, inverterStartPos, SolarEdgeBaseData); }
                                         if (ReadMeterData) { U.UpdateData(meterResponse, meterStartPos, SolarEdgeBaseData); }
-
-                                        LastDataUpdate = DateTime.Now;
-                                        SolarEdgeDataIsValid = true;
+                                       
                                     };
                                     break;
                                 case DataUpdateModeEnum.CreateNewObjects:
@@ -317,8 +335,8 @@ namespace SolarEdgeDataFetcher
                                     {
                                         SolarEdgeFullData = FD;
                                         SolarEdgeBaseData = BD;
-                                        LastDataUpdate = DateTime.Now;
-                                        SolarEdgeDataIsValid = true;
+                                       
+                                        
                                     };
                                     break;
                                 default:
@@ -326,7 +344,7 @@ namespace SolarEdgeDataFetcher
                                     throw new Exception($"Unknown {nameof(DataUpdateMode)} {DataUpdateMode}");
                             }
 
-
+                          
 
                             successiveFailCount = 0;
                             updateSucces = true;
@@ -335,9 +353,8 @@ namespace SolarEdgeDataFetcher
                         catch (Exception E)
                         {
                             successiveFailCount++;
-                            SolarEdgeDataIsValid = false;
-                            log.Warn($"Updating data failed.\n{E.Message}", E);
-
+                            
+                            log.Warn($"Updating data failed. {E.Message}", E);
 
                             if (successiveFailCount > maxSuccessiveFails)
                             {
@@ -345,17 +362,27 @@ namespace SolarEdgeDataFetcher
                                 log.Debug($"Disconnected from Modbus on {IPAdress}:{ModBusPort}\n{ExceptionText}. Data update failed more than {maxSuccessiveFails} times.");
                                 successiveFailCount = 0;
                             }
+
                         }
                     }
 
 
 
+
                     if (updateSucces)
                     {
+                        LastDataUpdate = DateTime.Now;
+
+                        dataValidTimeoutTimer.Stop();
+                        dataValidTimeoutTimer.Interval = DataInvalidAfterMs;
+                        dataValidTimeoutTimer.Start();
+
                         OnSolarEdgeDataUpdated();
+                        SolarEdgeDataIsValid = true;
                     }
                     else
                     {
+                        
                         OnSolarEdgeDataUpdateFailed();
                     }
 
@@ -377,7 +404,10 @@ namespace SolarEdgeDataFetcher
             }
         }
 
-
+        private void DataValidTimeoutTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            SolarEdgeDataIsValid = false;
+        }
 
 
         private void ConnectToModBus()
@@ -416,7 +446,7 @@ namespace SolarEdgeDataFetcher
         /// <summary>
         /// Is called when the update of the SolarEdgeData has failed.
         /// </summary>
-        protected void OnSolarEdgeDataUpdateFailed()
+        private void OnSolarEdgeDataUpdateFailed()
         {
             SolarEdgeDataUpdateFailed?.Invoke(this, new EventArgs());
         }
@@ -429,7 +459,7 @@ namespace SolarEdgeDataFetcher
         /// <summary>
         /// Is called when the SolarEdgeData has been updated.
         /// </summary>
-        protected void OnSolarEdgeDataUpdated()
+        private void OnSolarEdgeDataUpdated()
         {
             SolarEdgeDataUpdated?.Invoke(this, new EventArgs());
         }
@@ -441,7 +471,7 @@ namespace SolarEdgeDataFetcher
         /// <summary>
         /// Is called when SolarEdgeDataIsValidChanged has changed.
         /// </summary>
-        protected void OnSolarEdgeDataIsValidChanged()
+        private void OnSolarEdgeDataIsValidChanged()
         {
             SolarEdgeDataIsValidChanged?.Invoke(this, new EventArgs());
         }
@@ -590,7 +620,7 @@ namespace SolarEdgeDataFetcher
         /// Releases unmanaged and - optionally - managed resources.
         /// </summary>
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {

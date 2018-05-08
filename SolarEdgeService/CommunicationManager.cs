@@ -35,7 +35,7 @@ namespace SolarEdgeDataFetcher
         public bool IsActivated { get; private set; }
 
         ServiceHost SolarEdgeServiceHost = null;
-        private object ServiceLocker = new object();
+        private readonly object ServiceLocker = new object();
 
 
 
@@ -55,10 +55,8 @@ namespace SolarEdgeDataFetcher
 
                 SolarEdgeServiceHost = new ServiceHost(typeof(SolarEdgeWCFService))
                 {
-                    OpenTimeout = TimeSpan.FromSeconds(5),
-                    CloseTimeout = TimeSpan.FromSeconds(2),
-                   
-                    
+                    //OpenTimeout = TimeSpan.FromSeconds(5),
+                    //CloseTimeout = TimeSpan.FromSeconds(2),
                 };
 
                 try
@@ -129,8 +127,8 @@ namespace SolarEdgeDataFetcher
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void Instance_SolarEdgeDataUpdated(object sender, EventArgs e)
         {
-            SolarEdgeWCFService.SendBaseUpdates();
-            SolarEdgeWCFService.SendFullDataUpdates();
+            SolarEdgeWCFService.TransmitBaseUpdates();
+            SolarEdgeWCFService.TransmitFullDataUpdates();
         }
 
 
@@ -141,7 +139,7 @@ namespace SolarEdgeDataFetcher
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void Instance_SolarEdgeDataIsValidChanged(object sender, EventArgs e)
         {
-            SolarEdgeWCFService.SendDataIsValidUpdate(DataFetcher.Instance.SolarEdgeDataIsValid);
+            SolarEdgeWCFService.TransmitDataIsValidUpdate(DataFetcher.Instance.SolarEdgeDataIsValid);
         }
     }
 }

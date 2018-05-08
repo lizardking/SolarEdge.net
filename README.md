@@ -14,13 +14,16 @@ There are 2 classes for SolarEdge data:
 * __SolarEdgeFullData__ has properties for all data points that can be received from the inverter and from the meter.
 * __SolarEdgeBaseData__ has only a small subset of properties containing only the most important data.
 
+The data classes are fully decorated with _Category_, _DisplayName_, _Description_ and _TypeConverter_ attributes for easy use in controls (e.g. propertygrid control) or frameworks supporting them. In addition the data classes are also decorated with the _DataContract_ and _DataMember_ attributes so they can be used in WCF (windows communication foundation). 
+
+
 SolarEdgeDataFetcher
 ====================
 This project contains the DataFetcher class which encapsulates all reading functions to get the SolarEdge data from the inverter and/or the meter. When started the data fetcher will poll for new data at user definable intervals and map the data to SolarEdgeData objects as found in the SolarEdgeData project.
 
 Since the SolarEdge inverters only accept a single ModBus.TCP connection at a time, this class is implemented as a singleton class to prevent accidental instanciation of several instances. Access the static DataFetcher.Instance property to get the singleton instance of the class.
 
-The DataFetcher class has several config properties which should be set before clalling Start().
+The DataFetcher class has several config properties which should be set before calling Start().
 
 Config properties
 -----------------
@@ -57,17 +60,38 @@ Methods
 -------
 
 * __Start()__ starts the data fetcher which will poll for new data at userdefineable intervals.
-* __Stop__ will stop the data fetcher
+* __Stop()__ will stop the data fetcher.
 
 SolarEdgeService
 ================
 
 The SolarEdgeService a windows service which can also be started as a normal exe which uses the data fetcher to receive the latest data from the SolarEdge inverter and makes that data available through a WCF (windows communication foundation) service.
 
-Thhis WCF service provides methods to get the latestes data and it also has methods to register for automatic updates when data updates are available. It is recommend to use the automatic update subscription functionality to ensure that the latest data is always available.
+The behaviour, bindings and other settings of the WCF service can be adjusted in the app.config file.
 
-The _SolarEdgeServiceClient_ project contains a class libary with the necessary client code to receive data updates from the _SolarEdgeService_.
+This WCF service provides methods to get the latestes data and it also has methods to register for automatic updates when data updates are available. It is recommend to use the automatic update subscription functionality to ensure that the latest data is always available.
 
 Depending on your windows version you might need to use the following statement to allow for proper function of the service (make sure you use the correct DOMAIN/user and to adjust the url if you change it in the app.config):
 
 `netsh http add urlacl url=http://+:8735/SolarEdgeWCFService user=DOMAIN\user`
+
+The _SolarEdgeServiceClient_ project contains a class libary with the necessary client code to receive data updates from the _SolarEdgeService_.
+
+
+
+
+
+Misc
+====
+
+Own applications
+----------------
+If you want to use SolarEdge data resp. code from this project in your own application? There are possible 2 ways:
+
+* Reference _SolarEdgeDataFetcher_ and use the _DataFetcher_ class from your own code. This is only recommended if you are sure that you wont need SolarEdge data in any other program (SolarEdge inverters only allow a single modmus.TCP connection).
+* Install the _SolarEdgeService_ and  get the data through the provided WCF service functions. A easy way to start is to reference the _SolarEdgeServiceClient_ project which encapsulates all the WCF stuff and provides some simple methode, properties and events to access the SolarEdge data.
+
+Logging
+-------
+
+_Log4Net_ has been used to provide some logging of the activities in the projects. To activate the logging put a file named _Log4NetConfig.xml_ containing the config for log4net into the exe directory.

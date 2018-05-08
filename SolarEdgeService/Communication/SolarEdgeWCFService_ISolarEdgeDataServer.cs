@@ -108,7 +108,7 @@ namespace SolarEdgeService.Communication
         /// <summary>
         /// Sends the full data updates.
         /// </summary>
-        public static void SendFullDataUpdates()
+        public static void TransmitFullDataUpdates()
         {
             lock (_sycnRoot)
             {
@@ -126,7 +126,7 @@ namespace SolarEdgeService.Communication
 
                     try
                     {
-                        _FullUpdateCallbackChannels[i].SendFullDataUpdate(SED);
+                        _FullUpdateCallbackChannels[i].TransmitFullDataUpdate(SED);
                         log.DebugFormat("Pushed full data update on Callback Channel: {0}", _FullUpdateCallbackChannels[i].GetHashCode());
                     }
                     catch (Exception ex)
@@ -195,7 +195,7 @@ namespace SolarEdgeService.Communication
         /// <summary>
         /// Sends the base updates.
         /// </summary>
-        public static void SendBaseUpdates()
+        public static void TransmitBaseUpdates()
         {
             lock (_sycnRoot)
             {
@@ -214,7 +214,7 @@ namespace SolarEdgeService.Communication
 
                     try
                     {
-                        _BaseUpdateCallbackChannels[i].SendBaseDataUpdate(SED);
+                        _BaseUpdateCallbackChannels[i].TransmitBaseDataUpdate(SED);
                         log.DebugFormat("Pushed base data update on Callback Channel: {0}", _BaseUpdateCallbackChannels[i].GetHashCode());
                     }
                     catch (Exception ex)
@@ -232,7 +232,7 @@ namespace SolarEdgeService.Communication
         /// Sends the DataIsValid updates.
         /// </summary>
         /// <param name="DataIsValid">if set to <c>true</c> [data is valid].</param>
-        public static void SendDataIsValidUpdate(bool DataIsValid)
+        public static void TransmitDataIsValidUpdate(bool DataIsValid)
         {
             for (int i = _FullUpdateCallbackChannels.Count - 1; i >= 0; i--)
             {
@@ -245,7 +245,7 @@ namespace SolarEdgeService.Communication
 
                 try
                 {
-                    _FullUpdateCallbackChannels[i].SendDataIsValidUpdate(DataIsValid);
+                    _FullUpdateCallbackChannels[i].TransmitDataIsValidUpdate(DataIsValid);
                     log.DebugFormat("Pushed DataIsValidUpdate on Callback Channel: {0}", _FullUpdateCallbackChannels[i].GetHashCode());
                 }
                 catch (Exception ex)
@@ -266,7 +266,7 @@ namespace SolarEdgeService.Communication
 
                 try
                 {
-                    _BaseUpdateCallbackChannels[i].SendDataIsValidUpdate(DataIsValid);
+                    _BaseUpdateCallbackChannels[i].TransmitDataIsValidUpdate(DataIsValid);
                     log.DebugFormat("Pushed DataIsValidUpdate on Callback Channel: {0}", _BaseUpdateCallbackChannels[i].GetHashCode());
                 }
                 catch (Exception ex)

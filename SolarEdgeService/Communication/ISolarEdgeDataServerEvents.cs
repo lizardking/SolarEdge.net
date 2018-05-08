@@ -20,20 +20,20 @@ namespace SolarEdgeService.Communication
         /// </summary>
         /// <param name="SolarEdgeFullData">The solar edge full data.</param>
         [OperationContract(IsOneWay = true)]
-        void SendFullDataUpdate(SolarEdgeFullData SolarEdgeFullData);
+        void TransmitFullDataUpdate(SolarEdgeFullData SolarEdgeFullData);
 
         /// <summary>
         /// Sends SolarEdgeBaseData.
         /// </summary>
         /// <param name="SolarEdgeBaseData">The solar edge base data.</param>
         [OperationContract(IsOneWay = true)]
-        void SendBaseDataUpdate(SolarEdgeBaseData SolarEdgeBaseData);
+        void TransmitBaseDataUpdate(SolarEdgeBaseData SolarEdgeBaseData);
 
         /// <summary>
         /// Sends the value of the DataIsValid property.
         /// </summary>
         /// <param name="DataIsValid">if set to <c>true</c> [data is valid].</param>
         [OperationContract(IsOneWay = true)]
-        void SendDataIsValidUpdate(bool DataIsValid);
+        void TransmitDataIsValidUpdate(bool DataIsValid);
     }
 }
