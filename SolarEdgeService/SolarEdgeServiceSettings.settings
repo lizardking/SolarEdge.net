@@ -1,0 +1,33 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SolarEdgeService" GeneratedClassName="SolarEdgeServiceSettings">
+  <Profiles />
+  <Settings>
+    <Setting Name="AutorunServicesInGUIMode" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RefreshIntervalMs" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">5000</Value>
+    </Setting>
+    <Setting Name="IPAdress" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">10.0.1.116</Value>
+    </Setting>
+    <Setting Name="ModBusPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">502</Value>
+    </Setting>
+    <Setting Name="ConnectionTimeoutMs" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2500</Value>
+    </Setting>
+    <Setting Name="MinIntervalBetweenUpdatesMs" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2000</Value>
+    </Setting>
+    <Setting Name="ReadInverterData" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ReadMeterData" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DataUpdateMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">UpdateExistingObjects</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
