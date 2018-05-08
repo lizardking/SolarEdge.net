@@ -1,2 +1,73 @@
 # SolarEdge.net
-c# code to handle data from a SolarEdge inverter and or meter
+
+c# code to handle data from a SolarEdge inverters and or meters.
+
+The following projects exist in the solution:
+
+SolarEdgeData
+=============
+
+Contains classes to hold the parsed SolarEdge data, type converters to display the values and a attribute classes which which explains the source of the data.
+
+There are 2 classes for SolarEdge data:
+
+* __SolarEdgeFullData__ has properties for all data points that can be received from the inverter and from the meter.
+* __SolarEdgeBaseData__ has only a small subset of properties containing only the most important data.
+
+SolarEdgeDataFetcher
+====================
+This project contains the DataFetcher class which encapsulates all reading functions to get the SolarEdge data from the inverter and/or the meter. When started the data fetcher will poll for new data at user definable intervals and map the data to SolarEdgeData objects as found in the SolarEdgeData project.
+
+Since the SolarEdge inverters only accept a single ModBus.TCP connection at a time, this class is implemented as a singleton class to prevent accidental instanciation of several instances. Access the static DataFetcher.Instance property to get the singleton instance of the class.
+
+The DataFetcher class has several config properties which should be set before clalling Start().
+
+Config properties
+-----------------
+
+* __RefreshIntervalMs__ - Gets or sets the refresh interval in ms. If the time required for reading and updating the data plus the MinIntervalBetweenUpdatesMs is larger than the RefreshIntervalMs, the RefreshIntervalMs will be overidden ny MinIntervalBetweenUpdatesMs plus the time required for the updates.
+* __MinIntervalBetweenUpdatesMs__ - Gets or sets the minimum interval between updates in ms.
+* __IPAdress__ - IP address of the SolarEdge inverter.
+* __ModBusPort__ -  Gets or sets the modbus TCP port (typically 502).
+* __ConnectionTimeoutMs__ -  Gets or sets the connection timeout in ms for the ModBus (default 2000ms).
+* __ReadInverterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
+* __ReadMeterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
+* __DataUpdateMode__ - Gets or sets the data update mode. UpdateExistingObjects will update the properties of the existing data objects. If the data object do net yet exist new data object will be created. CreateNewObjects will be created on every data update.
+
+Data Properties
+---------------
+
+* __SolarEdgeDataIsValid__ whether the SolarEdgeData properties contain valid data.
+* __ConnectionEstablished__ indicates wether the connection to the modbus is established or not.
+* __ConnectionLastEstablished__ contains the timestamp of the last time the connection was established. 
+* __LastDataUpdate__ contains the timestamp of the last data update.
+* __SolarEdgeFullData__ contains the SolarEdgeFullData object as defined in the SolarEdgeData project.
+* __SolarEdgeBaseData__ contains the SolarEdgeBaseData object as defined in the SolarEdgeData project.
+* __Started__ indicates if the data fetcher has been started.
+* __ConnectionEstablishedCountLastHour__ indictates the number of time the modbus connection has been (re)established during the last hour. 
+
+Events
+------
+
+* __SolarEdgeDataUpdated__ is fired after the solar edge data has been updated successfully.
+* __SolarEdgeDataUpdateFailed__ is fired if a data update fails (e.g. due to lost connection, incorect respons from inverter, faulty data).
+* __SolarEdgeDataIsValidChanged__ is fired when the value of the _SolarEdgeDataIsValid_ property has changed.
+
+Methods
+-------
+
+* __Start()__ starts the data fetcher which will poll for new data at userdefineable intervals.
+* __Stop__ will stop the data fetcher
+
+SolarEdgeService
+================
+
+The SolarEdgeService a windows service which can also be started as a normal exe which uses the data fetcher to receive the latest data from the SolarEdge inverter and makes that data available through a WCF (windows communication foundation) service.
+
+Thhis WCF service provides methods to get the latestes data and it also has methods to register for automatic updates when data updates are available. It is recommend to use the automatic update subscription functionality to ensure that the latest data is always available.
+
+The _SolarEdgeServiceClient_ project contains a class libary with the necessary client code to receive data updates from the _SolarEdgeService_.
+
+Depending on your windows version you might need to use the following statement to allow for proper function of the service (make sure you use the correct DOMAIN/user and to adjust the url if you change it in the app.config):
+
+`netsh http add urlacl url=http://+:8735/SolarEdgeWCFService user=DOMAIN\user`
