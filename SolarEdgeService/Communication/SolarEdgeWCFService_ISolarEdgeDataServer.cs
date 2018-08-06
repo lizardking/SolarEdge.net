@@ -15,7 +15,7 @@ namespace SolarEdgeService.Communication
     /// <seealso cref="SolarEdgeService.Communication.ISolarEdgeDataServer" />
     public partial class SolarEdgeWCFService : ISolarEdgeDataServer
     {
-        
+
         private static readonly object _sycnRoot = new object();
 
 
@@ -204,7 +204,7 @@ namespace SolarEdgeService.Communication
 
                 for (int i = _BaseUpdateCallbackChannels.Count - 1; i >= 0; i--)
                 {
-                    
+
                     if (((ICommunicationObject)_BaseUpdateCallbackChannels[i]).State != CommunicationState.Opened)
                     {
                         log.DebugFormat("Detected Non-Open Callback Channel for base updates: {0}", _BaseUpdateCallbackChannels[i].GetHashCode());
@@ -277,5 +277,57 @@ namespace SolarEdgeService.Communication
             }
 
         }
+
+
+        public static void TransmitHeartbeat()
+        {
+            for (int i = _FullUpdateCallbackChannels.Count - 1; i >= 0; i--)
+            {
+                if (((ICommunicationObject)_FullUpdateCallbackChannels[i]).State != CommunicationState.Opened)
+                {
+                    log.DebugFormat("Detected Non-Open Callback Channel for full data updates: {0}", _FullUpdateCallbackChannels[i].GetHashCode());
+                    _FullUpdateCallbackChannels.RemoveAt(i);
+                    continue;
+                }
+
+                try
+                {
+                    _FullUpdateCallbackChannels[i].TransmitHeartbeat();
+                    log.DebugFormat("Pushed DataIsValidUpdate on Callback Channel: {0}", _FullUpdateCallbackChannels[i].GetHashCode());
+                }
+                catch (Exception ex)
+                {
+                    log.Debug("Service threw exception while sending DataIsValidUpdate on Callback Channel for full data updates: {0}".Build(_FullUpdateCallbackChannels[i].GetHashCode()), ex);
+                    _FullUpdateCallbackChannels.RemoveAt(i);
+                }
+            }
+
+            for (int i = _BaseUpdateCallbackChannels.Count - 1; i >= 0; i--)
+            {
+                if (((ICommunicationObject)_BaseUpdateCallbackChannels[i]).State != CommunicationState.Opened)
+                {
+                    log.DebugFormat("Detected Non-Open Callback Channel for base data updates: {0}", _BaseUpdateCallbackChannels[i].GetHashCode());
+                    _BaseUpdateCallbackChannels.RemoveAt(i);
+                    continue;
+                }
+
+                try
+                {
+                    _FullUpdateCallbackChannels[i].TransmitHeartbeat();
+                    log.DebugFormat("Pushed DataIsValidUpdate on Callback Channel: {0}", _BaseUpdateCallbackChannels[i].GetHashCode());
+                }
+                catch (Exception ex)
+                {
+                    log.Debug("Service threw exception while sending DataIsValidUpdate on Callback Channel for base data updates: {0}".Build(_BaseUpdateCallbackChannels[i].GetHashCode()), ex);
+                    _BaseUpdateCallbackChannels.RemoveAt(i);
+                }
+            }
+        }
+
+
     }
+
+
+
+
 }

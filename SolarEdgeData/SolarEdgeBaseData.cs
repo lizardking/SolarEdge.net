@@ -10,7 +10,7 @@ namespace SolarEdgeData
     public class SolarEdgeBaseData : INotifyPropertyChanged
     {
         const int MeterBaseOffset = 0;
-        const int InverterBaseOffset = 0;
+        const int InverterBaseOffset = -1;
 
         #region Property changed event
         /// <summary>

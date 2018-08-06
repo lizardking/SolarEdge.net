@@ -35,5 +35,15 @@ namespace SolarEdgeService.Communication
         /// <param name="DataIsValid">if set to <c>true</c> [data is valid].</param>
         [OperationContract(IsOneWay = true)]
         void TransmitDataIsValidUpdate(bool DataIsValid);
+
+        /// <summary>
+        /// Sends a Haertbeat.
+        /// </summary>
+        [OperationContract(IsOneWay = true)]
+        void TransmitHeartbeat();
+
+
+
+
     }
 }

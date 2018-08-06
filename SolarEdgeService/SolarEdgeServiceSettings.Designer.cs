@@ -12,7 +12,7 @@ namespace SolarEdgeService {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.6.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.7.0.0")]
     public sealed partial class SolarEdgeServiceSettings : global::System.Configuration.ApplicationSettingsBase {
         
         private static SolarEdgeServiceSettings defaultInstance = ((SolarEdgeServiceSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new SolarEdgeServiceSettings())));
@@ -104,6 +104,24 @@ namespace SolarEdgeService {
         public string DataUpdateMode {
             get {
                 return ((string)(this["DataUpdateMode"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000")]
+        public int HeartbeatTimerIntervalMs {
+            get {
+                return ((int)(this["HeartbeatTimerIntervalMs"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ResetHeartbeatTimerOnDataUpdates {
+            get {
+                return ((bool)(this["ResetHeartbeatTimerOnDataUpdates"]));
             }
         }
     }

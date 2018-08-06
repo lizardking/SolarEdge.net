@@ -4,15 +4,18 @@ using System.Linq;
 using System.Text;
 using System.ServiceModel;
 using SolarEdgeService.Communication;
+using System.Timers;
+using SolarEdgeService;
+using SolarEdgeDataFetcher;
 
-namespace SolarEdgeDataFetcher
+namespace SolarEdgeService
 {
     /// <summary>
     /// This class handles the WCF services.
     /// </summary>
     public class CommunicationManager
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         #region Singleton implementation
         private static readonly Lazy<CommunicationManager> SingletonInstance = new Lazy<CommunicationManager>(() => new CommunicationManager());
 
@@ -37,6 +40,7 @@ namespace SolarEdgeDataFetcher
         ServiceHost SolarEdgeServiceHost = null;
         private readonly object ServiceLocker = new object();
 
+        Timer HeartbeatTimer = null;
 
 
         /// <summary>
@@ -67,18 +71,31 @@ namespace SolarEdgeDataFetcher
                 {
                     SolarEdgeServiceHost.Abort();
                     SolarEdgeServiceHost = null;
-                    Log.Error("Could not activate WCF SolarEdgeService", E);
+                    log.Error("Could not activate WCF SolarEdgeService", E);
                     throw new Exception("Could not activate WCF SolarEdgeService", E);
                 }
 
 
-                IsActivated = true;
+
+
 
                 DataFetcher.Instance.SolarEdgeDataUpdated += Instance_SolarEdgeDataUpdated;
                 DataFetcher.Instance.SolarEdgeDataIsValidChanged += Instance_SolarEdgeDataIsValidChanged;
+
+                if (SolarEdgeServiceSettings.Default.HeartbeatTimerIntervalMs > 0)
+                {
+                    StartHeartbeatTimer();
+                }
+
+                IsActivated = true;
+
+
             }
-            Log.Debug("Servicehost for SolarEdgeService opend.");
+            log.Debug("Servicehost for SolarEdgeService opend.");
         }
+
+
+
 
 
 
@@ -88,37 +105,101 @@ namespace SolarEdgeDataFetcher
         /// <exception cref="System.Exception">Could not deactivate WCF SolarEdgeService</exception>
         public void DeactivateServices()
         {
-            if (!IsActivated) return;
-
-            if (SolarEdgeServiceHost != null)
+            lock (ServiceLocker)
             {
-                DataFetcher.Instance.SolarEdgeDataUpdated -= Instance_SolarEdgeDataUpdated;
-                DataFetcher.Instance.SolarEdgeDataIsValidChanged -= Instance_SolarEdgeDataIsValidChanged;
-                try
-                {
-                    SolarEdgeServiceHost.Close(TimeSpan.FromSeconds(2));
-                }
-                catch (TimeoutException E)
-                {
-                    Log.Warn($"Could not close ServiceHost for the SolarEdgeService within {SolarEdgeServiceHost.CloseTimeout.TotalSeconds} seconds. Will abort service now.", E);
-                    SolarEdgeServiceHost.Abort();
-                }
-                catch (Exception E)
-                {
+                if (!IsActivated) return;
 
-                    SolarEdgeServiceHost.Abort();
-                    Log.Error("Could not deactivate WCF SolarEdgeService", E);
-                    throw new Exception("Could not deactivate WCF SolarEdgeService", E);
-                }
-                finally
+                if (SolarEdgeServiceHost != null)
                 {
-                    SolarEdgeServiceHost = null;
+                    DataFetcher.Instance.SolarEdgeDataUpdated -= Instance_SolarEdgeDataUpdated;
+                    DataFetcher.Instance.SolarEdgeDataIsValidChanged -= Instance_SolarEdgeDataIsValidChanged;
+                    try
+                    {
+                        SolarEdgeServiceHost.Close(TimeSpan.FromSeconds(2));
+                    }
+                    catch (TimeoutException E)
+                    {
+                        log.Warn($"Could not close ServiceHost for the SolarEdgeService within {SolarEdgeServiceHost.CloseTimeout.TotalSeconds} seconds. Will abort service now.", E);
+                        SolarEdgeServiceHost.Abort();
+                    }
+                    catch (Exception E)
+                    {
+
+                        SolarEdgeServiceHost.Abort();
+                        
+                        log.Error("Could not deactivate WCF SolarEdgeService", E);
+                        throw new Exception("Could not deactivate WCF SolarEdgeService", E);
+                    }
+                    finally
+                    {
+                        SolarEdgeServiceHost = null;
+                    }
+                };
+                if (HeartbeatTimer != null)
+                {
+                    TerminateHeartbeatTimer();
                 }
             }
 
 
-            Log.Debug("ServiceHost for SolarEdgeService closed.");
+            log.Debug("ServiceHost for SolarEdgeService closed.");
         }
+
+
+        /// <summary>
+        /// Starts the heartbeat timer.
+        /// </summary>
+        private void StartHeartbeatTimer()
+        {
+            HeartbeatTimer = new Timer()
+            {
+                Interval = SolarEdgeServiceSettings.Default.HeartbeatTimerIntervalMs,
+                AutoReset = false
+            };
+            HeartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            HeartbeatTimer.Start();
+        }
+
+        /// <summary>
+        /// Terminates the heartbeat timer.
+        /// </summary>
+        private void TerminateHeartbeatTimer()
+        {
+            if (HeartbeatTimer != null)
+            {
+                HeartbeatTimer.Stop();
+                HeartbeatTimer.Elapsed -= HeartbeatTimer_Elapsed;
+                HeartbeatTimer = null;
+            }
+        }
+
+        /// <summary>
+        /// Restarts the heartbeat timer.
+        /// </summary>
+        private void RestartHeartbeatTimer()
+        {
+            if (HeartbeatTimer != null)
+            {
+                HeartbeatTimer.Stop();
+                HeartbeatTimer.Start();
+            }
+        }
+
+
+        /// <summary>
+        /// Handles the Elapsed event of the HeartbeatTimer control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="ElapsedEventArgs"/> instance containing the event data.</param>
+        private void HeartbeatTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            SolarEdgeWCFService.TransmitHeartbeat();
+            lock (ServiceLocker)
+            {
+                RestartHeartbeatTimer();
+            }
+        }
+
 
         /// <summary>
         /// Handles the SolarEdgeDataUpdated event of the DataFetcher.
@@ -127,6 +208,13 @@ namespace SolarEdgeDataFetcher
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void Instance_SolarEdgeDataUpdated(object sender, EventArgs e)
         {
+            if(SolarEdgeServiceSettings.Default.ResetHeartbeatTimerOnDataUpdates)
+            {
+                lock (ServiceLocker)
+                {
+                    RestartHeartbeatTimer();
+                }
+            }
             SolarEdgeWCFService.TransmitBaseUpdates();
             SolarEdgeWCFService.TransmitFullDataUpdates();
         }

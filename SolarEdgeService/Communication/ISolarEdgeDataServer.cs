@@ -36,7 +36,6 @@ namespace SolarEdgeService.Communication
         [OperationContract()]
         bool GetSolarEdgeDataIsValid();
 
-
         /// <summary>
         /// Subscribes for SolarEdgeFullData updates.
         /// </summary>

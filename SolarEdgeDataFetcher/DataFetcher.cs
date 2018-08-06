@@ -168,8 +168,10 @@ namespace SolarEdgeDataFetcher
                 if (modbusClient != null)
                 {
                     log.Info($"Stopping {nameof(DataFetcher)}");
+
                     dataValidTimeoutTimer.Stop();
                     dataValidTimeoutTimer.Elapsed -= DataValidTimeoutTimer_Elapsed;
+
                     updateTimer.Stop();
                     updateTimer.Elapsed -= UpdateTimer_Elapsed;
                     modbusClient.Disconnect();
@@ -196,7 +198,7 @@ namespace SolarEdgeDataFetcher
 
         private EasyModbus.ModbusClient modbusClient = null;
 
-        private object locker = new object();
+        private readonly object locker = new object();
 
         private Timer dataValidTimeoutTimer = new Timer();
 
@@ -373,12 +375,13 @@ namespace SolarEdgeDataFetcher
                     {
                         LastDataUpdate = DateTime.Now;
 
-                        dataValidTimeoutTimer.Stop();
-                        dataValidTimeoutTimer.Interval = DataInvalidAfterMs;
-                        dataValidTimeoutTimer.Start();
-
-                        OnSolarEdgeDataUpdated();
                         SolarEdgeDataIsValid = true;
+
+                        StartDataValidTimeoutTimer();
+                        
+                        OnSolarEdgeDataUpdated();
+
+                        
                     }
                     else
                     {
@@ -391,7 +394,7 @@ namespace SolarEdgeDataFetcher
 
                     int sleepDurationMs = (RefreshIntervalMs - totalUpdateDurationMs).Limit(MinIntervalBetweenUpdatesMs.Limit(10, int.MaxValue), int.MaxValue);
 
-                    log.Debug($"Will wait for {sleepDurationMs}ms before next update.");
+                    log.Debug($"Update duration {totalUpdateDurationMs}ms. Will wait for {sleepDurationMs}ms before next update.");
 
                     updateTimer.Interval = sleepDurationMs;
 
@@ -401,6 +404,16 @@ namespace SolarEdgeDataFetcher
                 {
                     log.Warn($"{nameof(modbusClient)} is null. Most likely Stop has been called.");
                 }
+            }
+        }
+
+        private void StartDataValidTimeoutTimer()
+        {
+            if (DataInvalidAfterMs > 0)
+            {
+                dataValidTimeoutTimer.Stop();
+                dataValidTimeoutTimer.Interval = DataInvalidAfterMs;
+                dataValidTimeoutTimer.Start();
             }
         }
 

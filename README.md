@@ -36,6 +36,7 @@ Config properties
 * __ReadInverterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
 * __ReadMeterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
 * __DataUpdateMode__ - Gets or sets the data update mode. UpdateExistingObjects will update the properties of the existing data objects. If the data object do net yet exist new data object will be created. CreateNewObjects will be created on every data update.
+* __DataInvalidAfterMs__ - The number of ms after which the DataIsValid property will be set to false if the data has not been updated. Values <=0 are disabling data invalidation.
 
 Data Properties
 ---------------
@@ -86,7 +87,7 @@ Misc
 
 Own applications
 ----------------
-If you want to use SolarEdge data resp. code from this project in your own application? There are possible 2 ways:
+If you want to use SolarEdge data resp. code from this project in your own application? There are 2 possible ways:
 
 * Reference _SolarEdgeDataFetcher_ and use the _DataFetcher_ class from your own code. This is only recommended if you are sure that you wont need SolarEdge data in any other program (SolarEdge inverters only allow a single modmus.TCP connection).
 * Install the _SolarEdgeService_ and  get the data through the provided WCF service functions. A easy way to start is to reference the _SolarEdgeServiceClient_ project which encapsulates all the WCF stuff and provides some simple methode, properties and events to access the SolarEdge data.
