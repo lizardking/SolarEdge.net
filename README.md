@@ -14,7 +14,7 @@ There are 2 classes for SolarEdge data:
 * __SolarEdgeFullData__ has properties for all data points that can be received from the inverter and from the meter.
 * __SolarEdgeBaseData__ has only a small subset of properties containing only the most important data.
 
-The data classes are fully decorated with _Category_, _DisplayName_, _Description_ and _TypeConverter_ attributes for easy use in controls (e.g. propertygrid control) or frameworks supporting them. In addition the data classes are also decorated with the _DataContract_ and _DataMember_ attributes so they can be used in WCF (windows communication foundation). 
+The data classes are fully decorated with _Category_, _DisplayName_, _Description_ and _TypeConverter_ attributes for easy use in controls (e.g. propertygrid control) or other frameworks supporting them. In addition the data classes are also decorated with the _DataContract_ and _DataMember_ attributes so they can be used in WCF (windows communication foundation). 
 
 
 SolarEdgeDataFetcher
@@ -77,9 +77,6 @@ Depending on your windows version you might need to use the following statement 
 `netsh http add urlacl url=http://+:8735/SolarEdgeWCFService user=DOMAIN\user`
 
 The _SolarEdgeServiceClient_ project contains a class libary with the necessary client code to receive data updates from the _SolarEdgeService_.
-
-
-
 
 
 Misc
