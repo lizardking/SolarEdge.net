@@ -35,7 +35,7 @@ Config properties
 * __ConnectionTimeoutMs__ -  Gets or sets the connection timeout in ms for the ModBus (default 2000ms).
 * __ReadInverterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
 * __ReadMeterData__ - Gets or sets a value indicating whether inverter data should be read (default True).
-* __DataUpdateMode__ - Gets or sets the data update mode. UpdateExistingObjects will update the properties of the existing data objects. If the data object do net yet exist new data object will be created. CreateNewObjects will be created on every data update.
+* __DataUpdateMode__ - Gets or sets the data update mode. UpdateExistingObjects will update the properties of the existing data objects. If the data object do net yet exist new data object will be created. CreateNewObjects will create a new object on every data update.
 * __DataInvalidAfterMs__ - The number of ms after which the DataIsValid property will be set to false if the data has not been updated. Values <=0 are disabling data invalidation.
 
 Data Properties
