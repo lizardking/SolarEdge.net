@@ -1,6 +1,8 @@
 # SolarEdge.net
 
-c# code to handle data from a SolarEdge inverters and or meters.
+c# code to handle data from a SolarEdge inverters and or meters. 
+
+This is probably not best possible or most elegant solution, but it is working for now. You are very welcome to fork the repository and to make changes to the project.
 
 The following projects exist in the solution:
 
@@ -70,13 +72,11 @@ The SolarEdgeService a windows service which can also be started as a normal exe
 
 The behaviour, bindings and other settings of the WCF service can be adjusted in the app.config file.
 
-This WCF service provides methods to get the latestes data and it also has methods to register for automatic updates when data updates are available. It is recommend to use the automatic update subscription functionality to ensure that the latest data is always available.
+This WCF service provides methods to get the latestes data and it also has methods to register for automatic updates when data updates are available. It is recommended to use the automatic update subscription functionality to ensure that the latest data is always available.
 
 Depending on your windows version you might need to use the following statement to allow for proper function of the service (make sure you use the correct DOMAIN/user and to adjust the url if you change it in the app.config):
 
 `netsh http add urlacl url=http://+:8735/SolarEdgeWCFService user=DOMAIN\user`
-
-The _SolarEdgeServiceClient_ project contains a class libary with the necessary client code to receive data updates from the _SolarEdgeService_.
 
 
 Misc
@@ -87,7 +87,7 @@ Own applications
 If you want to use SolarEdge data resp. code from this project in your own application? There are 2 possible ways:
 
 * Reference _SolarEdgeDataFetcher_ and use the _DataFetcher_ class from your own code. This is only recommended if you are sure that you wont need SolarEdge data in any other program (SolarEdge inverters only allow a single modmus.TCP connection).
-* Install the _SolarEdgeService_ and  get the data through the provided WCF service functions. A easy way to start is to reference the _SolarEdgeServiceClient_ project which encapsulates all the WCF stuff and provides some simple methode, properties and events to access the SolarEdge data.
+* Install the _SolarEdgeService_ and  get the data through the provided WCF service functions.
 
 Logging
 -------
